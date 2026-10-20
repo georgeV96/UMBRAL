@@ -1,0 +1,41 @@
+name: windows-vst3
+
+# Builds Umbral.vst3 with Visual Studio on Windows and publishes it as a ready-to-use zip.
+#   * manual run: Actions -> windows-vst3 -> Run workflow  (zip appears as a workflow artifact)
+#   * pushing a tag "v*" also creates a GitHub Release with the zip attached
+on:
+  workflow_dispatch:
+  push:
+    tags: [ 'v*' ]
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+      - name: Configure
+        run: cmake -S . -B build -A x64 -DUMBRAL_BUILD_TESTS=OFF
+      - name: Build
+        run: cmake --build build --config Release --target Umbral_VST3 --parallel
+      - name: Package
+        shell: pwsh
+        run: |
+          $b = "build/Umbral_artefacts/Release/VST3/Umbral.vst3"
+          if (-not (Test-Path $b)) { throw "missing $b" }
+          New-Item -ItemType Directory -Force -Path dist | Out-Null
+          Compress-Archive -Path $b -DestinationPath dist/Umbral-windows-x64-vst3.zip -Force
+          Get-ChildItem -Recurse $b | Select-Object FullName, Length
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Umbral-windows-x64-vst3
+          path: dist/Umbral-windows-x64-vst3.zip
+      - name: Release
+        if: startsWith(github.ref, 'refs/tags/v')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: dist/Umbral-windows-x64-vst3.zip
