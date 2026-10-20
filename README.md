@@ -30,6 +30,21 @@ cmake --build build --target umbral_tests umbral_render
 
 En Linux hacen falta las cabeceras habituales de JUCE (`libasound2-dev libx11-dev libxrandr-dev libxinerama-dev libxcursor-dev libfreetype-dev libfontconfig1-dev`). Se puede apuntar a otra copia de JUCE con `-DUMBRAL_JUCE_DIR=<ruta>`.
 
+## Instalar en Windows (un paso)
+
+Con Git, CMake y Visual Studio (C++) instalados:
+
+```
+git clone --recurse-submodules https://github.com/georgeV96/UMBRAL.git
+cd UMBRAL
+.\install_windows.ps1                               # o doble clic en install_windows.bat
+.\install_windows.ps1 -InstallDir "D:\Plugins\VST3"  # otra carpeta de plugins
+```
+
+Descarga JUCE, compila Release x64 y copia `Umbral.vst3` a `C:\Program Files\Common Files\VST3` (esa carpeta pide PowerShell como administrador;
+con `-InstallDir` puedes usar una carpeta tuya). Después reescanea los VST3 en el DAW. El script y la compilación con Visual Studio **no se han podido
+probar todavía** (el plugin solo se ha compilado con GCC en Linux).
+
 ## Controles
 
 Todos modifican el procesamiento real (y todos menos SEED son automatizables).
