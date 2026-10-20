@@ -270,11 +270,11 @@ static void testErosion()
         check (worst < 4.0, "EROSION 0.4 moves no octave-wide band by more than 4 dB (%.1f dB): it is not a low/high-pass", worst);
     }
     {   // continuous input must not turn into sudden artefacts at moderate settings: envelope of a pure partial stays steady
-        const auto s = sig::sine (1500, 6.0, FS, 0.3f);
+        const auto s = sig::sine (1500, 7.0, FS, 0.3f);   // measured from 3 s to 6 s: the last 20 ms before the file ends would show the edge, not the effect
         const auto r = render (s, make (0.5f, 0.3f, 0.3f, 0.1f, 0.5f, 1.0f));
         std::vector<double> v; for (size_t a = at (3); a + 960 <= at (6); a += 960) v.push_back (ana::rms (r.L, a, 960));
         double mn = 1e9, mx = 0; for (double d : v) { mn = std::min (mn, d); mx = std::max (mx, d); }
-        check (ana::db (mx / mn) < 3.0, "moderate settings on a sustained partial: 20 ms envelope varies only %.2f dB (no flutter)", ana::db (mx / mn));
+        check (ana::db (mx / mn) < 1.5, "moderate settings on a sustained partial: 20 ms envelope varies only %.2f dB (no flutter)", ana::db (mx / mn));
     }
 }
 
@@ -632,6 +632,13 @@ static void testAllocationsAndCpu()
     check (g_allocs.load() == 0, "no heap allocation while processing 10 s of stereo (%ld allocations)", g_allocs.load());
     std::printf ("  CPU: %.2f %% of one core for stereo 48 kHz (N=%d, 8x overlap, latency %d samples = %.1f ms)\n", 100.0 * secs / 10.0, e.getFftSize(), e.getLatencySamples(), 1000.0 * e.getLatencySamples() / FS);
     check (secs / 10.0 < 0.15, "CPU load below 15 %% of one core (%.1f %%)", 100.0 * secs / 10.0);
+    {   // silence after loud, resonant material must not get more expensive (denormals in recursive state)
+        Buf zl (at (10), 0.0f), zr (at (10), 0.0f);
+        const auto s0 = std::chrono::steady_clock::now();
+        for (size_t pos = 0; pos + 512 <= zl.size(); pos += 512) { float* ch[2] = { zl.data() + pos, zr.data() + pos }; e.process (ch, 2, 512); }
+        const double silentSecs = std::chrono::duration<double> (std::chrono::steady_clock::now() - s0).count();
+        check (silentSecs < 1.5 * secs + 0.01, "10 s of silence after the signal cost %.2f s vs %.2f s for the signal (no denormal slow-down)", silentSecs, secs);
+    }
 }
 
 int main()

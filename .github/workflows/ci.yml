@@ -1,0 +1,17 @@
+name: engine-tests
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  engine:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Configure (DSP core only, no JUCE)
+        run: cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DUMBRAL_BUILD_PLUGIN=OFF
+      - name: Build
+        run: cmake --build build --target umbral_tests umbral_render -j2
+      - name: Run engine tests
+        run: ./build/umbral_tests

@@ -83,5 +83,16 @@ if(UMBRAL_BUILD_PLUGIN)
                 juce::juce_recommended_config_flags
                 juce::juce_recommended_lto_flags
                 juce::juce_recommended_warning_flags)
+
+        # Headless host: instantiates the real AudioProcessor and checks the plugin layer end to end.
+        if(UMBRAL_BUILD_TESTS)
+            juce_add_console_app(UmbralHostTest PRODUCT_NAME "UmbralHostTest")
+            target_sources(UmbralHostTest PRIVATE Tests/PluginHostTest.cpp Source/PluginProcessor.cpp Source/PluginEditor.cpp)
+            target_compile_definitions(UmbralHostTest PRIVATE JUCE_WEB_BROWSER=0 JUCE_USE_CURL=0)
+            target_link_libraries(UmbralHostTest
+                PRIVATE umbral_dsp juce::juce_audio_processors juce::juce_gui_basics
+                PUBLIC juce::juce_recommended_config_flags)
+            add_test(NAME umbral_plugin_host COMMAND UmbralHostTest)
+        endif()
     endif()
 endif()
