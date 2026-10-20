@@ -1,8 +1,7 @@
 name: windows-vst3
 
 # Builds Umbral.vst3 with Visual Studio on Windows and publishes it as a ready-to-use zip.
-#   * manual run: Actions -> windows-vst3 -> Run workflow  (zip appears as a workflow artifact)
-#   * pushing a tag "v*" also creates a GitHub Release with the zip attached
+#   * every run publishes a GitHub Release (tag windows-build-<n>) with the zip attached: just download Umbral.vst3 from Releases
 on:
   workflow_dispatch:
   push:
@@ -35,7 +34,9 @@ jobs:
           name: Umbral-windows-x64-vst3
           path: dist/Umbral-windows-x64-vst3.zip
       - name: Release
-        if: startsWith(github.ref, 'refs/tags/v')
         uses: softprops/action-gh-release@v2
         with:
+          tag_name: windows-build-${{ github.run_number }}
+          name: Umbral VST3 for Windows (build ${{ github.run_number }})
+          body: "Unzip and copy the Umbral.vst3 folder to C:\\Program Files\\Common Files\\VST3, then rescan VST3 in your DAW. Built with Visual Studio from ${{ github.sha }}. Not yet tested in a DAW."
           files: dist/Umbral-windows-x64-vst3.zip
