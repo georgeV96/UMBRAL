@@ -1,0 +1,23 @@
+# build outputs
+build/
+build_*/
+out/
+cmake-build-*/
+*.obj
+*.pdb
+*.ilk
+
+# generated renders (can be large)
+TestOutput/
+*.wav
+
+# IDE / OS
+.vs/
+.vscode/
+.idea/
+*.user
+Thumbs.db
+.DS_Store
+
+# local Claude Code settings
+.claude/settings.local.json
